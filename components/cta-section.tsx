@@ -1,10 +1,13 @@
 "use client"
 
+import Link from "next/link"
 import { AnimatedSection } from "@/components/animated-section"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 export function CtaSection() {
+  const { user } = useAuth()
   return (
     <section className="relative px-6 py-24 md:py-32">
       <div className="pointer-events-none absolute inset-0">
@@ -23,16 +26,20 @@ export function CtaSection() {
             mentor is ready — and your first step is just one click away.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="group animate-pulse-glow bg-primary px-8 text-primary-foreground hover:bg-primary/90"
-            >
-              Get Started Free
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              No credit card required
-            </p>
+            <Link href={user ? "/dashboard" : "/get-started"}>
+              <Button
+                size="lg"
+                className="group animate-pulse-glow bg-primary px-8 text-primary-foreground hover:bg-primary/90"
+              >
+                {user ? "Go to Dashboard" : "Get Started Free"}
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+            {!user && (
+              <p className="text-xs text-muted-foreground">
+                No credit card required
+              </p>
+            )}
           </div>
         </div>
       </AnimatedSection>

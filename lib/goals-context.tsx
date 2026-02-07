@@ -22,6 +22,7 @@ interface GoalsContextType {
   goals: Goal[]
   addGoal: (goal: Goal) => void
   toggleTask: (goalId: string, taskId: string) => void
+  addTask: (goalId: string, afterIndex: number, title: string) => void
   deleteGoal: (goalId: string) => void
   getGoal: (id: string) => Goal | undefined
   activeGoals: Goal[]
@@ -69,6 +70,23 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  const addTask = useCallback((goalId: string, afterIndex: number, title: string) => {
+    setGoals((prev) =>
+      prev.map((goal) => {
+        if (goal.id !== goalId) return goal
+        const newTask: Task = {
+          id: crypto.randomUUID(),
+          title: title.trim(),
+          description: "",
+          completed: false,
+        }
+        const next = [...goal.tasks]
+        next.splice(afterIndex + 1, 0, newTask)
+        return { ...goal, tasks: next }
+      })
+    )
+  }, [])
+
   const deleteGoal = useCallback((goalId: string) => {
     setGoals((prev) => prev.filter((g) => g.id !== goalId))
   }, [])
@@ -83,7 +101,7 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
 
   return (
     <GoalsContext.Provider
-      value={{ goals, addGoal, toggleTask, deleteGoal, getGoal, activeGoals, completedGoals }}
+      value={{ goals, addGoal, toggleTask, addTask, deleteGoal, getGoal, activeGoals, completedGoals }}
     >
       {children}
     </GoalsContext.Provider>

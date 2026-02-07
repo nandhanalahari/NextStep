@@ -111,6 +111,32 @@ export default function CompletedPage() {
                           {createdDate}
                         </div>
                       </div>
+
+                      {/* Same roadmap (left-to-right) for this goal */}
+                      <div className="mt-4 overflow-x-auto pb-2 -mx-1">
+                        <div className="flex items-center gap-0 min-w-max">
+                          {goal.tasks.map((task, taskIndex) => (
+                            <div key={task.id} className="flex items-center gap-0 flex-shrink-0">
+                              <div className="flex flex-col items-center w-[160px] sm:w-[180px]">
+                                <div className="w-full rounded-lg border border-primary/20 bg-primary/5 p-3">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                                    <span className="text-sm font-medium text-foreground line-through">
+                                      {task.title}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 border border-primary/30 mt-1.5 text-xs font-medium text-primary">
+                                  {taskIndex + 1}
+                                </div>
+                              </div>
+                              {taskIndex < goal.tasks.length - 1 && (
+                                <div className="flex-1 h-px bg-border min-w-[20px] mx-0.5" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

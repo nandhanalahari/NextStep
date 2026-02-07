@@ -13,8 +13,10 @@ import {
   Check,
   Zap,
   Target,
+  AlertCircle,
 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface GeneratedPlan {
   title: string
@@ -28,13 +30,15 @@ export default function NewGoalPage() {
   const [goal, setGoal] = useState("")
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState<GeneratedPlan | null>(null)
-  const [phase, setPhase] = useState<"input" | "generating" | "review">("input")
+  const [phase, setPhase] = useState<"input" | "generating" | "review" | "error">("input")
   const [visibleTasks, setVisibleTasks] = useState(0)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleGenerate = async () => {
     if (!goal.trim()) return
     setPhase("generating")
     setLoading(true)
+    setErrorMessage(null)
 
     try {
       const res = await fetch("/api/generate-plan", {
@@ -43,9 +47,23 @@ export default function NewGoalPage() {
         body: JSON.stringify({ goal: goal.trim() }),
       })
 
-      if (!res.ok) throw new Error("Failed to generate plan")
-
       const data = await res.json()
+
+      if (!res.ok) {
+        const msg = data?.error || "Failed to generate plan"
+        setErrorMessage(msg)
+        setPhase("error")
+        toast.error(msg)
+        return
+      }
+
+      if (!data?.plan?.title || !Array.isArray(data?.plan?.tasks)) {
+        setErrorMessage("Invalid response from AI. Please try again.")
+        setPhase("error")
+        toast.error("Invalid response from AI")
+        return
+      }
+
       setPlan(data.plan)
       setPhase("review")
 
@@ -55,8 +73,11 @@ export default function NewGoalPage() {
         await new Promise((resolve) => setTimeout(resolve, 150))
         setVisibleTasks(i + 1)
       }
-    } catch {
-      setPhase("input")
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Something went wrong. Check your connection and try again."
+      setErrorMessage(msg)
+      setPhase("error")
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -182,102 +203,119 @@ export default function NewGoalPage() {
           </div>
         )}
 
-        {/* Generating Phase */}
-        {phase === "generating" && (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center animate-fade-in">
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-primary/20 blur-xl animate-pulse" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-primary/30 bg-card">
-                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        {/* Expanded chat: user message + AI generating, plan, or error */}
+        {(phase === "generating" || phase === "review" || phase === "error") && (
+          <div className="animate-fade-in space-y-6">
+            {/* User message bubble */}
+            <div className="flex justify-end">
+              <div className="max-w-[85%] rounded-2xl rounded-br-md border border-primary/20 bg-primary/10 px-5 py-4">
+                <p className="text-sm font-medium text-primary/90 mb-1">You</p>
+                <p className="text-foreground">{goal}</p>
               </div>
             </div>
-            <h2 className="mt-8 font-display text-2xl font-bold text-foreground">
-              Crafting your plan...
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              AI is analyzing your goal and creating personalized micro-tasks
-            </p>
-            <div className="mt-6 flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-2 w-2 rounded-full bg-primary animate-pulse"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Review Phase */}
-        {phase === "review" && plan && (
-          <div className="animate-fade-in">
-            <div className="mb-8 text-center">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
-                <Check className="h-4 w-4" />
-                Plan Ready
-              </div>
-              <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl">
-                {plan.title}
-              </h1>
-              <p className="mt-3 text-lg text-muted-foreground">
-                {plan.description}
-              </p>
-            </div>
-
-            {/* Tasks */}
-            <div className="flex flex-col gap-4">
-              {plan.tasks.map((task, index) => (
-                <div
-                  key={task.title}
-                  className={`group relative rounded-xl border border-border bg-card p-5 transition-all duration-500 hover:border-primary/30 hover:bg-card/80 ${
-                    index < visibleTasks
-                      ? "translate-y-0 opacity-100"
-                      : "translate-y-4 opacity-0"
-                  }`}
-                  style={{
-                    transitionDelay: `${index * 50}ms`,
-                  }}
-                >
-                  <div className="flex gap-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-sm font-bold text-primary">
-                      {index + 1}
+            {/* AI: typing indicator, plan, or error */}
+            <div className="flex justify-start">
+              <div className="max-w-[90%] rounded-2xl rounded-bl-md border border-border bg-card px-5 py-4 w-full">
+                <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  NextStep AI
+                </p>
+                {phase === "error" && (
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>{errorMessage || "Something went wrong."}</span>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-display font-semibold text-foreground">
-                        {task.title}
-                      </h3>
-                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                        {task.description}
-                      </p>
+                    <p className="text-xs text-muted-foreground">
+                      Check that GOOGLE_GENERATIVE_AI_API_KEY is set in .env.local and restart the dev server. Get a free key at{" "}
+                      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">aistudio.google.com/apikey</a>.
+                    </p>
+                    <Button
+                      onClick={handleGenerate}
+                      variant="outline"
+                      className="border-border"
+                    >
+                      Try again
+                    </Button>
+                  </div>
+                )}
+                {phase === "generating" && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Crafting your plan...</span>
+                    <div className="flex gap-1 ml-2">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"
+                          style={{ animationDelay: `${i * 200}ms` }}
+                        />
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Button
-                onClick={handleSave}
-                size="lg"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 px-10 animate-pulse-glow"
-              >
-                <Check className="mr-2 h-4 w-4" />
-                Save to Dashboard
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  setPlan(null)
-                  setVisibleTasks(0)
-                  setPhase("input")
-                }}
-                className="border-border bg-transparent text-foreground hover:bg-secondary"
-              >
-                Try a Different Goal
-              </Button>
+                )}
+                {phase === "review" && plan && (
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-display text-lg font-bold text-foreground">
+                        {plan.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {plan.description}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      {plan.tasks.map((task, index) => (
+                        <div
+                          key={task.title}
+                          className={`rounded-lg border border-border bg-muted/30 p-3 transition-all ${
+                            index < visibleTasks
+                              ? "translate-y-0 opacity-100"
+                              : "translate-y-2 opacity-0"
+                          }`}
+                          style={{ transitionDelay: `${index * 50}ms` }}
+                        >
+                          <span className="text-xs font-medium text-primary mr-2">
+                            {index + 1}.
+                          </span>
+                          <span className="font-medium text-foreground">{task.title}</span>
+                          {task.description && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {task.description}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Head over to dashboard to see your roadmap.
+                    </p>
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <Button
+                        onClick={handleSave}
+                        size="lg"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 animate-pulse-glow"
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Save to Dashboard
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setPlan(null)
+                          setVisibleTasks(0)
+                          setPhase("input")
+                        }}
+                        className="border-border bg-transparent text-foreground"
+                      >
+                        Try a Different Goal
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

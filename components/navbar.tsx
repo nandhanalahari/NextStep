@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
+import { Menu, X, ChevronDown } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -15,6 +16,7 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { user, loading } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -66,16 +68,28 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Log in
-            </Button>
-          </Link>
-          <Link href="/get-started">
-            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Get Started
-            </Button>
-          </Link>
+          {!loading &&
+            (user ? (
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-foreground hover:text-foreground font-medium">
+                  {user.name}
+                  <ChevronDown className="ml-1 h-4 w-4 text-muted-foreground" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                    Log in
+                  </Button>
+                </Link>
+                <Link href="/get-started">
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            ))}
         </div>
 
         <button
@@ -102,16 +116,27 @@ export function Navbar() {
               </a>
             ))}
             <div className="flex flex-col gap-2 pt-2">
-              <Link href="/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/get-started" onClick={() => setMobileOpen(false)}>
-                <Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  Get Started
-                </Button>
-              </Link>
+              {!loading &&
+                (user ? (
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                    <Button variant="default" size="sm" className="w-full justify-start bg-primary text-primary-foreground">
+                      {user.name} → Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setMobileOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
+                        Log in
+                      </Button>
+                    </Link>
+                    <Link href="/get-started" onClick={() => setMobileOpen(false)}>
+                      <Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                ))}
             </div>
           </div>
         </div>

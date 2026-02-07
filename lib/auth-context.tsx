@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 
 export interface User {
   id: string
@@ -18,6 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -41,6 +43,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refetch()
   }, [])
+
+  // Refetch auth when navigating (e.g. dashboard → home) so navbar shows correct state
+  useEffect(() => {
+    if (pathname !== null) refetch()
+  }, [pathname])
 
   return (
     <AuthContext.Provider value={{ user, loading, refetch, logout }}>

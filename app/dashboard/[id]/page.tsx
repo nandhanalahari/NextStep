@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useGoals } from "@/lib/goals-context"
 import { DashboardShell } from "@/components/dashboard-shell"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -14,9 +13,16 @@ import {
   Trophy,
   PartyPopper,
   Calendar,
-  ChevronDown,
-  ChevronUp,
+  Lock,
+  Plus,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 
 export default function GoalDetailPage({
   params,
@@ -25,9 +31,11 @@ export default function GoalDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const { getGoal, toggleTask, deleteGoal } = useGoals()
-  const [expandedTask, setExpandedTask] = useState<string | null>(null)
+  const { getGoal, toggleTask, addTask, deleteGoal } = useGoals()
   const [celebrateId, setCelebrateId] = useState<string | null>(null)
+  const [customTitle, setCustomTitle] = useState("")
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [addAfterIndex, setAddAfterIndex] = useState(0)
 
   const goal = getGoal(id)
 
@@ -51,6 +59,14 @@ export default function GoalDetailPage({
   const totalCount = goal.tasks.length
   const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
+  // First incomplete index: tasks before this are done; this and after are locked until previous done
+  const firstIncompleteIndex = goal.tasks.findIndex((t) => !t.completed)
+  const isTaskUnlocked = (index: number) => {
+    if (goal.tasks[index].completed) return true
+    if (firstIncompleteIndex === -1) return true // all done
+    return index === firstIncompleteIndex
+  }
+
   const handleToggle = (taskId: string) => {
     const task = goal.tasks.find((t) => t.id === taskId)
     if (task && !task.completed) {
@@ -58,6 +74,19 @@ export default function GoalDetailPage({
       setTimeout(() => setCelebrateId(null), 800)
     }
     toggleTask(goal.id, taskId)
+  }
+
+  const handleAddTask = () => {
+    if (!customTitle.trim()) return
+    addTask(goal.id, addAfterIndex, customTitle.trim())
+    setCustomTitle("")
+    setAddDialogOpen(false)
+  }
+
+  const openAddDialog = (afterIndex: number) => {
+    setAddAfterIndex(afterIndex)
+    setCustomTitle("")
+    setAddDialogOpen(true)
   }
 
   const handleDelete = () => {
@@ -73,7 +102,6 @@ export default function GoalDetailPage({
 
   return (
     <DashboardShell>
-      {/* Back nav */}
       <Link
         href="/dashboard"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -108,7 +136,6 @@ export default function GoalDetailPage({
           </Button>
         </div>
 
-        {/* Progress Bar */}
         <div className="mt-6 rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground">
@@ -118,11 +145,15 @@ export default function GoalDetailPage({
               {percentage}%
             </span>
           </div>
-          <Progress value={percentage} className="h-3" />
+          <div className="h-3 w-full rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-500 rounded-full"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Completion celebration */}
       {goal.completed && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-6 text-center animate-scale-in">
           <PartyPopper className="mx-auto h-10 w-10 text-primary" />
@@ -135,91 +166,122 @@ export default function GoalDetailPage({
         </div>
       )}
 
-      {/* Tasks List */}
+      {/* Roadmap: horizontal left-to-right */}
       <div className="mt-8">
-        <h2 className="font-display text-xl font-bold text-foreground mb-4">Tasks</h2>
-        <div className="flex flex-col gap-3">
-          {goal.tasks.map((task, index) => {
-            const isExpanded = expandedTask === task.id
-            const isCelebrating = celebrateId === task.id
+        <h2 className="font-display text-xl font-bold text-foreground mb-4">Roadmap</h2>
+        <div className="overflow-x-auto pb-4 -mx-1">
+          <div className="flex items-start gap-0 min-w-max">
+            {goal.tasks.map((task, index) => {
+              const unlocked = isTaskUnlocked(index)
+              const isCelebrating = celebrateId === task.id
 
-            return (
-              <div
-                key={task.id}
-                className={`group relative rounded-xl border transition-all duration-300 animate-fade-in-up ${
-                  task.completed
-                    ? "border-primary/20 bg-primary/5"
-                    : "border-border bg-card hover:border-primary/20"
-                } ${isCelebrating ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex items-start gap-4 p-4">
-                  {/* Step number + checkbox */}
-                  <div className="flex flex-col items-center gap-2 pt-0.5">
+              return (
+                <div key={task.id} className="flex items-center gap-0 flex-shrink-0">
+                  {/* Task node */}
+                  <div
+                    className={`relative flex flex-col items-center w-[180px] sm:w-[200px] ${
+                      isCelebrating ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl" : ""
+                    }`}
+                  >
                     <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                      className={`w-full rounded-xl border p-4 transition-all ${
                         task.completed
-                          ? "bg-primary text-primary-foreground"
-                          : "border border-border text-muted-foreground"
+                          ? "border-primary/30 bg-primary/5"
+                          : unlocked
+                            ? "border-primary/30 bg-card hover:border-primary/40"
+                            : "border-border bg-muted/50 opacity-80"
                       }`}
                     >
-                      {task.completed ? (
-                        <Trophy className="h-3.5 w-3.5" />
-                      ) : (
-                        index + 1
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={`task-${task.id}`}
-                        checked={task.completed}
-                        onCheckedChange={() => handleToggle(task.id)}
-                        className="mt-1 h-5 w-5 shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <label
-                          htmlFor={`task-${task.id}`}
-                          className={`block font-medium cursor-pointer transition-colors ${
-                            task.completed
-                              ? "text-muted-foreground line-through"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {task.title}
-                        </label>
-
-                        {/* Expandable description */}
-                        {isExpanded && (
-                          <p className="mt-2 text-sm text-muted-foreground leading-relaxed animate-fade-in">
-                            {task.description}
-                          </p>
-                        )}
+                      <div className="flex items-start gap-3">
+                        <div className="shrink-0 pt-0.5">
+                          {unlocked ? (
+                            <Checkbox
+                              id={`task-${task.id}`}
+                              checked={task.completed}
+                              onCheckedChange={() => handleToggle(task.id)}
+                              className="h-5 w-5"
+                            />
+                          ) : (
+                            <div
+                              className="flex h-5 w-5 items-center justify-center rounded border border-border bg-muted"
+                              title="Complete previous tasks to unlock"
+                            >
+                              <Lock className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <label
+                            htmlFor={unlocked ? `task-${task.id}` : undefined}
+                            className={`block text-sm font-medium cursor-pointer ${
+                              task.completed
+                                ? "text-muted-foreground line-through"
+                                : unlocked
+                                  ? "text-foreground"
+                                  : "text-muted-foreground"
+                            }`}
+                          >
+                            {task.title}
+                          </label>
+                          {task.description && (
+                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                              {task.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-background border border-border mt-2 text-xs font-medium text-muted-foreground">
+                      {index + 1}
+                    </div>
                   </div>
 
-                  {/* Expand toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setExpandedTask(isExpanded ? null : task.id)}
-                    className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                    aria-label={isExpanded ? "Collapse task details" : "Expand task details"}
-                  >
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </button>
+                  {/* Connector line + Add button between tasks */}
+                  {index < goal.tasks.length - 1 && (
+                    <div className="flex items-center px-1 self-stretch min-w-[48px]">
+                      <div className="flex-1 h-px bg-border min-w-[24px]" />
+                      <button
+                        type="button"
+                        onClick={() => openAddDialog(index)}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-primary/40 bg-primary/5 text-primary hover:bg-primary/15 transition-colors"
+                        aria-label="Add task"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                      <div className="flex-1 h-px bg-border min-w-[24px]" />
+                    </div>
+                  )}
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
+
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add custom task</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              New task will be inserted after step {addAfterIndex + 1}.
+            </p>
+            <div className="flex gap-2 pt-2">
+              <Input
+                placeholder="Task title"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
+              />
+              <Button
+                onClick={handleAddTask}
+                disabled={!customTitle.trim()}
+                className="shrink-0"
+              >
+                Add
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardShell>
   )

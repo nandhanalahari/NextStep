@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 const goals = [
   "land my dream internship",
@@ -15,6 +16,7 @@ const goals = [
 ]
 
 export function HeroSection() {
+  const { user } = useAuth()
   const [currentGoal, setCurrentGoal] = useState(0)
   const [displayed, setDisplayed] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
@@ -97,12 +99,12 @@ export function HeroSection() {
           className="mt-10 flex animate-fade-in-up flex-col items-center justify-center gap-4 sm:flex-row"
           style={{ animationDelay: "300ms" }}
         >
-          <Link href="/get-started">
+          <Link href={user ? "/dashboard" : "/get-started"}>
             <Button
               size="lg"
               className="group animate-pulse-glow bg-primary px-8 text-primary-foreground hover:bg-primary/90"
             >
-              Start Your Journey
+              {user ? "Go to Dashboard" : "Start Your Journey"}
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
