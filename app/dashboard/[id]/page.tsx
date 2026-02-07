@@ -7,6 +7,8 @@ import { useGoals } from "@/lib/goals-context"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   ArrowLeft,
   Trash2,
@@ -15,6 +17,9 @@ import {
   Calendar,
   Lock,
   Plus,
+  ChevronDown,
+  ChevronUp,
+  Trash,
 } from "lucide-react"
 import {
   Dialog,
@@ -31,11 +36,20 @@ export default function GoalDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const { getGoal, toggleTask, addTask, deleteGoal } = useGoals()
+  const { getGoal, toggleTask, completeTask, updateGoalReflection, addTask, deleteTask, deleteGoal } = useGoals()
   const [celebrateId, setCelebrateId] = useState<string | null>(null)
   const [customTitle, setCustomTitle] = useState("")
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [addAfterIndex, setAddAfterIndex] = useState(0)
+  const [customDescription, setCustomDescription] = useState("")
+  const [completionDialogOpen, setCompletionDialogOpen] = useState(false)
+  const [completionTaskId, setCompletionTaskId] = useState<string | null>(null)
+  const [completionSummary, setCompletionSummary] = useState("")
+  const [reflectionDialogOpen, setReflectionDialogOpen] = useState(false)
+  const [reflectionGoalId, setReflectionGoalId] = useState<string | null>(null)
+  const [reflection, setReflection] = useState({ beginningThoughts: "", endThoughts: "", satisfaction: 3 })
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
 
   const goal = getGoal(id)
 
@@ -69,23 +83,66 @@ export default function GoalDetailPage({
 
   const handleToggle = (taskId: string) => {
     const task = goal.tasks.find((t) => t.id === taskId)
-    if (task && !task.completed) {
-      setCelebrateId(taskId)
-      setTimeout(() => setCelebrateId(null), 800)
+    if (task?.completed) {
+      toggleTask(goal.id, taskId)
+    } else if (task && isTaskUnlocked(goal.tasks.indexOf(task))) {
+      setCompletionTaskId(taskId)
+      setCompletionSummary("")
+      setCompletionDialogOpen(true)
     }
-    toggleTask(goal.id, taskId)
+  }
+
+  const handleCompleteTask = () => {
+    if (!completionTaskId || !completionSummary.trim()) return
+    const taskIndex = goal.tasks.findIndex((t) => t.id === completionTaskId)
+    const willCompleteGoal = goal.tasks.filter((t) => t.completed).length + 1 === goal.tasks.length
+    completeTask(goal.id, completionTaskId, completionSummary.trim())
+    setCelebrateId(completionTaskId)
+    setTimeout(() => setCelebrateId(null), 800)
+    setCompletionDialogOpen(false)
+    setCompletionTaskId(null)
+    setCompletionSummary("")
+    if (willCompleteGoal) {
+      setReflectionGoalId(goal.id)
+      setReflection({ beginningThoughts: "", endThoughts: "", satisfaction: 3 })
+      setReflectionDialogOpen(true)
+    }
+  }
+
+  const handleReflectionSubmit = () => {
+    if (reflectionGoalId) {
+      updateGoalReflection(reflectionGoalId, {
+        beginningThoughts: reflection.beginningThoughts.trim() || undefined,
+        endThoughts: reflection.endThoughts.trim() || undefined,
+        satisfaction: reflection.satisfaction,
+      })
+      setReflectionDialogOpen(false)
+      setReflectionGoalId(null)
+    }
   }
 
   const handleAddTask = () => {
     if (!customTitle.trim()) return
-    addTask(goal.id, addAfterIndex, customTitle.trim())
+    addTask(goal.id, addAfterIndex, customTitle.trim(), customDescription.trim())
     setCustomTitle("")
+    setCustomDescription("")
     setAddDialogOpen(false)
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (deletingTaskId) return
+    setDeletingTaskId(taskId)
+    try {
+      await deleteTask(goal.id, taskId)
+    } finally {
+      setDeletingTaskId(null)
+    }
   }
 
   const openAddDialog = (afterIndex: number) => {
     setAddAfterIndex(afterIndex)
     setCustomTitle("")
+    setCustomDescription("")
     setAddDialogOpen(true)
   }
 
@@ -155,14 +212,38 @@ export default function GoalDetailPage({
       </div>
 
       {goal.completed && (
-        <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-6 text-center animate-scale-in">
-          <PartyPopper className="mx-auto h-10 w-10 text-primary" />
-          <h2 className="mt-3 font-display text-xl font-bold text-foreground">
-            Goal Completed!
-          </h2>
-          <p className="mt-1 text-muted-foreground">
-            Amazing work! You have completed all tasks for this goal.
-          </p>
+        <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-6 animate-scale-in">
+          <div className="text-center">
+            <PartyPopper className="mx-auto h-10 w-10 text-primary" />
+            <h2 className="mt-3 font-display text-xl font-bold text-foreground">
+              Goal Completed!
+            </h2>
+            <p className="mt-1 text-muted-foreground">
+              Amazing work! You have completed all tasks for this goal.
+            </p>
+          </div>
+          {goal.reflection && (goal.reflection.beginningThoughts || goal.reflection.endThoughts || goal.reflection.satisfaction) && (
+            <div className="mt-6 pt-6 border-t border-primary/20 space-y-3 text-left">
+              {goal.reflection.satisfaction != null && (
+                <p className="text-sm">
+                  <span className="font-medium text-foreground">Satisfaction:</span>{" "}
+                  <span className="text-primary">{goal.reflection.satisfaction}/5</span>
+                </p>
+              )}
+              {goal.reflection.beginningThoughts && (
+                <p className="text-sm">
+                  <span className="font-medium text-foreground">At the start:</span>{" "}
+                  <span className="text-muted-foreground">{goal.reflection.beginningThoughts}</span>
+                </p>
+              )}
+              {goal.reflection.endThoughts && (
+                <p className="text-sm">
+                  <span className="font-medium text-foreground">Now:</span>{" "}
+                  <span className="text-muted-foreground">{goal.reflection.endThoughts}</span>
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -193,13 +274,16 @@ export default function GoalDetailPage({
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="shrink-0 pt-0.5">
+                        <div
+                          className="shrink-0 pt-0.5 flex flex-col gap-1 items-center"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {unlocked ? (
                             <Checkbox
                               id={`task-${task.id}`}
                               checked={task.completed}
                               onCheckedChange={() => handleToggle(task.id)}
-                              className="h-5 w-5"
+                              className="h-5 w-5 cursor-pointer"
                             />
                           ) : (
                             <div
@@ -209,11 +293,23 @@ export default function GoalDetailPage({
                               <Lock className="h-3 w-3 text-muted-foreground" />
                             </div>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            disabled={deletingTaskId === task.id}
+                            className="rounded p-0.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                            title="Delete task"
+                          >
+                            <Trash className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <label
-                            htmlFor={unlocked ? `task-${task.id}` : undefined}
-                            className={`block text-sm font-medium cursor-pointer ${
+                        <button
+                          type="button"
+                          onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                          className="min-w-0 flex-1 text-left"
+                        >
+                          <span
+                            className={`block text-sm font-medium ${
                               task.completed
                                 ? "text-muted-foreground line-through"
                                 : unlocked
@@ -222,13 +318,31 @@ export default function GoalDetailPage({
                             }`}
                           >
                             {task.title}
-                          </label>
-                          {task.description && (
-                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                              {task.description}
-                            </p>
+                          </span>
+                          {(task.description || (task.completed && task.completionSummary)) && expandedTaskId === task.id && (
+                            <div className="mt-2 space-y-2">
+                              {task.description && (
+                                <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                                  {task.description}
+                                </p>
+                              )}
+                              {task.completed && task.completionSummary && (
+                                <div>
+                                  <p className="text-xs font-medium text-primary">What I did:</p>
+                                  <p className="mt-0.5 text-xs text-muted-foreground whitespace-pre-wrap">
+                                    {task.completionSummary}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           )}
-                        </div>
+                          {(task.description || (task.completed && task.completionSummary)) && expandedTaskId !== task.id && (
+                            <span className="mt-1 flex items-center gap-1 text-xs text-primary">
+                              <ChevronDown className="h-3 w-3" />
+                              Click to expand
+                            </span>
+                          )}
+                        </button>
                       </div>
                     </div>
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-background border border-border mt-2 text-xs font-medium text-muted-foreground">
@@ -237,8 +351,8 @@ export default function GoalDetailPage({
                   </div>
 
                   {/* Connector line + Add button between tasks */}
-                  {index < goal.tasks.length - 1 && (
-                    <div className="flex items-center px-1 self-stretch min-w-[48px]">
+                  {index < goal.tasks.length - 1 ? (
+                    <div className="flex items-center px-1 self-start min-w-[48px] min-h-[40px]">
                       <div className="flex-1 h-px bg-border min-w-[24px]" />
                       <button
                         type="button"
@@ -248,6 +362,15 @@ export default function GoalDetailPage({
                       >
                         <Plus className="h-4 w-4" />
                       </button>
+                      <div className="flex-1 h-px bg-border min-w-[24px]" />
+                    </div>
+                  ) : (
+                    /* Trophy at end of roadmap */
+                    <div className="flex items-center px-1 self-start min-w-[48px] min-h-[40px]">
+                      <div className="flex-1 h-px bg-border min-w-[24px]" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+                        <Trophy className="h-5 w-5 text-primary" />
+                      </div>
                       <div className="flex-1 h-px bg-border min-w-[24px]" />
                     </div>
                   )}
@@ -265,19 +388,121 @@ export default function GoalDetailPage({
             <p className="text-sm text-muted-foreground">
               New task will be inserted after step {addAfterIndex + 1}.
             </p>
-            <div className="flex gap-2 pt-2">
-              <Input
-                placeholder="Task title"
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
-              />
+            <div className="space-y-3 pt-2">
+              <div>
+                <Label className="text-sm">Title</Label>
+                <Input
+                  placeholder="Task title"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Description</Label>
+                <Textarea
+                  placeholder="What does this task involve? How should it be done?"
+                  value={customDescription}
+                  onChange={(e) => setCustomDescription(e.target.value)}
+                  className="mt-1 min-h-[80px]"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddTask}
+                  disabled={!customTitle.trim() || !customDescription.trim()}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Task completion dialog: what did you do? */}
+        <Dialog open={completionDialogOpen} onOpenChange={setCompletionDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Complete task</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              What did you do to accomplish this task? List or summarize your steps.
+            </p>
+            <Textarea
+              placeholder="e.g., Researched 3 companies, updated resume, applied to 5 roles..."
+              value={completionSummary}
+              onChange={(e) => setCompletionSummary(e.target.value)}
+              className="min-h-[120px] mt-2"
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setCompletionDialogOpen(false)}>
+                Cancel
+              </Button>
               <Button
-                onClick={handleAddTask}
-                disabled={!customTitle.trim()}
-                className="shrink-0"
+                onClick={handleCompleteTask}
+                disabled={!completionSummary.trim()}
+                className="bg-primary text-primary-foreground"
               >
-                Add
+                Mark complete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reflection dialog when goal fully completed */}
+        <Dialog open={reflectionDialogOpen} onOpenChange={setReflectionDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Reflect on your journey</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              From the beginning to the end — how do you feel? Rate your satisfaction and share a brief reflection.
+            </p>
+            <div className="space-y-4 pt-4">
+              <div>
+                <Label className="text-sm">How satisfied are you? (1–5)</Label>
+                <div className="flex gap-2 mt-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setReflection((r) => ({ ...r, satisfaction: n }))}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                        reflection.satisfaction === n
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-border bg-muted/50 hover:bg-muted"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm">How did you feel at the beginning?</Label>
+                <Textarea
+                  placeholder="e.g., Overwhelmed, uncertain where to start..."
+                  value={reflection.beginningThoughts}
+                  onChange={(e) => setReflection((r) => ({ ...r, beginningThoughts: e.target.value }))}
+                  className="min-h-[80px] mt-2"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">How do you feel now?</Label>
+                <Textarea
+                  placeholder="e.g., Proud, more confident, ready for the next step..."
+                  value={reflection.endThoughts}
+                  onChange={(e) => setReflection((r) => ({ ...r, endThoughts: e.target.value }))}
+                  className="min-h-[80px] mt-2"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleReflectionSubmit} className="bg-primary text-primary-foreground">
+                Save reflection
               </Button>
             </div>
           </DialogContent>

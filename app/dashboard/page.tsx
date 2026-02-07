@@ -8,7 +8,23 @@ import { Plus, Target, Trophy } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardPage() {
-  const { activeGoals, completedGoals } = useGoals()
+  const { activeGoals, inProgressGoals, completedGoals, loading } = useGoals()
+  const completedSectionCount = inProgressGoals.length + completedGoals.length
+
+  if (loading) {
+    return (
+      <DashboardShell>
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 w-48 bg-muted rounded" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-muted rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </DashboardShell>
+    )
+  }
 
   return (
     <DashboardShell>
@@ -23,14 +39,14 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {completedGoals.length > 0 && (
+          {completedSectionCount > 0 && (
             <Link href="/dashboard/completed">
               <Button
                 variant="outline"
                 className="border-border bg-transparent text-foreground hover:bg-secondary"
               >
                 <Trophy className="mr-2 h-4 w-4 text-primary" />
-                Completed ({completedGoals.length})
+                Completed ({completedSectionCount})
               </Button>
             </Link>
           )}

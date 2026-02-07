@@ -83,7 +83,7 @@ export default function NewGoalPage() {
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!plan) return
 
     const newGoal: Goal = {
@@ -100,7 +100,7 @@ export default function NewGoalPage() {
       completed: false,
     }
 
-    addGoal(newGoal)
+    await addGoal(newGoal)
     router.push("/dashboard")
   }
 
