@@ -25,6 +25,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (!user.passwordHash || user.authProvider === "google") {
+      return NextResponse.json(
+        { error: "This account uses Sign in with Google. Use the Google button above." },
+        { status: 401 }
+      )
+    }
+
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) {
       return NextResponse.json(

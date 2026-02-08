@@ -92,7 +92,7 @@ cp .env.local.example .env.local
 - **AUTH_SECRET** – Generate: `openssl rand -base64 32`
 - **GOOGLE_GENERATIVE_AI_API_KEY** – For AI-generated goal plans (see below).
 - **ELEVENLABS_API_KEY** – For Voice Mentor (see below).
-- **GOOGLE_CLIENT_ID**, **GOOGLE_CLIENT_SECRET**, **GOOGLE_REDIRECT_URI** – Optional, for Google Calendar export (see below). The in-app calendar works without these.
+- **GOOGLE_CLIENT_ID**, **GOOGLE_CLIENT_SECRET**, **GOOGLE_REDIRECT_URI** – Optional, for **Sign in with Google** and Google Calendar export (see below). Email/password auth works without these.
 
 ### 2. Free Gemini API key (for "Get started" / AI plans)
 
@@ -118,20 +118,24 @@ NextStep uses ElevenLabs text-to-speech for the Voice Mentor feature:
    ELEVENLABS_API_KEY=your-copied-key
    ```
 
-### 4. Google Calendar (optional)
+### 4. Google OAuth (optional): Sign in with Google and Calendar
 
-To let users add "today's next step" to Google Calendar:
+The same Google OAuth client is used for **Sign in with Google** (login/get-started) and for **Google Calendar** (adding tasks to Calendar). If you configure it, both features work.
 
-1. In [Google Cloud Console](https://console.cloud.google.com/), create a project (or use existing), enable **Google Calendar API**, and create **OAuth 2.0 Client ID** (Web application).
-2. Add **Authorized redirect URI**: `http://localhost:3000/api/auth/google/callback` (or your app URL, e.g. `http://localhost:3002/...` if you run on 3002).
-3. Copy Client ID and Client Secret into `.env.local`:
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a project (or use existing).
+2. Enable **Google Calendar API** if you want Calendar export; Sign in with Google only needs the OAuth client.
+3. Create **OAuth 2.0 Client ID** (Web application). Add **Authorized redirect URI**: `http://localhost:3000/api/auth/google/callback` (or your app URL).
+4. Copy Client ID and Client Secret into `.env.local`:
    ```bash
    GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=GOCSPX-xxx
    GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
    ```
 
-The app also has an **in-app calendar** (Dashboard → Calendar) where you set due dates on tasks and see them in a month view; no Google sign-in required.
+- **Sign in with Google**: Login and Get started pages show "Continue with Google"; users can create an account or log in with their Google profile (no password stored).
+- **Google Calendar**: From the goal detail page, users can connect their account and add today’s next step to Google Calendar.
+
+The **in-app calendar** (Dashboard → Calendar) works without Google; you set due dates on tasks and see them in a month view.
 
 ### 5. Run the app
 
