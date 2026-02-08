@@ -132,18 +132,30 @@ export default function CalendarPage() {
               </a>
             </Button>
           ) : (
-            <Button
-              onClick={handleSyncToGoogle}
-              disabled={syncLoading}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {syncLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CalendarPlus className="mr-2 h-4 w-4" />
-              )}
-              {syncLoading ? "Syncing…" : "Sync upcoming tasks to Google Calendar"}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                onClick={handleSyncToGoogle}
+                disabled={syncLoading}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {syncLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CalendarPlus className="mr-2 h-4 w-4" />
+                )}
+                {syncLoading ? "Syncing…" : "Sync upcoming tasks to Google Calendar"}
+              </Button>
+              <Button
+                variant="outline"
+                className="border-border/50"
+                asChild
+              >
+                <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open Google Calendar
+                </a>
+              </Button>
+            </div>
           )}
         </div>
 
