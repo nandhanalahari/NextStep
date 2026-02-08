@@ -13,7 +13,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the landing page. Bro
 1. Click **Get Started**.
 2. Enter your name and email, then click **Continue**.
 3. Set a password (min. 8 characters) and click **Create Account**.
-4. You’ll be taken to your dashboard.
+4. You'll be taken to your dashboard.
 
 ### Log in
 
@@ -29,12 +29,12 @@ Your dashboard lists your active goals as cards. Each card shows:
 - Progress (e.g. 2 of 5 tasks)
 - A preview of tasks
 
-Use **New Goal** to create a goal, or **Completed** to see goals you’ve finished or partially finished.
+Use **New Goal** to create a goal, or **Completed** to see goals you've finished or partially finished.
 
 ### Creating a new goal
 
 1. Click **New Goal** (or **Create Your First Goal** if empty).
-2. Describe your goal in the text box (e.g. “Land a software engineering internship”).
+2. Describe your goal in the text box (e.g. "Land a software engineering internship").
 3. Optionally use the example buttons (Learn machine learning, Get a tech internship, etc.).
 4. Click **Generate Plan**.
 5. The AI generates a title, description, and task list.
@@ -44,10 +44,10 @@ Use **New Goal** to create a goal, or **Completed** to see goals you’ve finish
 ### Goal detail (roadmap)
 
 1. Click a goal card to open its roadmap.
-2. **Voice Mentor** – Each goal has a summary section. Click **Listen** to hear a calm voice briefing: “Today’s next step is… here’s why it matters.”
+2. **Voice Mentor** – Each goal has a summary section. Click **Listen** to hear a calm voice briefing: "Today's next step is… here's why it matters."
 3. Tasks appear left to right in sequence.
 4. Only the next incomplete task can be worked on; earlier ones are unlocked by completing previous tasks.
-5. Click a task’s checkbox to mark it complete.
+5. Click a task's checkbox to mark it complete.
 6. In the dialog, enter a short summary of what you did and click **Mark complete**.
 7. Use the **+** between tasks to add custom tasks.
 8. Use the trash icon on a task to delete it.
@@ -84,13 +84,13 @@ cp .env.local.example .env.local
 - **GOOGLE_GENERATIVE_AI_API_KEY** – For AI-generated goal plans (see below).
 - **ELEVENLABS_API_KEY** – For Voice Mentor (see below).
 
-### 2. Free Gemini API key (for “Get started” / AI plans)
+### 2. Free Gemini API key (for "Get started" / AI plans)
 
-NextStep uses Google’s Gemini to turn your goal into a step-by-step plan. You can use the **free tier**:
+NextStep uses Google's Gemini to turn your goal into a step-by-step plan. You can use the **free tier**:
 
 1. Go to **Google AI Studio**: [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 2. Sign in with your Google account.
-3. Click **“Create API key”** (or “Get API key”).
+3. Click **"Create API key"** (or "Get API key").
 4. Copy the key and add it to `.env.local`:
    ```bash
    GOOGLE_GENERATIVE_AI_API_KEY=your-copied-key
@@ -119,36 +119,6 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## ElevenLabs integration (Voice Mentor)
+## Voice Mentor (ElevenLabs)
 
-ElevenLabs text-to-speech powers the Voice Mentor feature. Each goal has a summary section; clicking **Listen** plays a calm voice briefing:
-
-- **Read aloud** – Play the current “next step” or goal description via audio for accessibility or hands-free use.
-- **Task completion feedback** – Short voice affirmation when a task is marked done.
-- **Motivational snippets** – Optional voice encouragement when opening the dashboard or finishing a streak.
-
-### Setup
-
-1. Sign up at [ElevenLabs](https://elevenlabs.io) and create an API key.
-2. Add to `.env.local`:
-   ```
-   ELEVENLABS_API_KEY=your-key
-   ```
-
-### Implementation approaches
-
-1. **API route** – `POST /api/tts` that accepts text, calls ElevenLabs, and returns audio (e.g. MP3). Use `POST /v1/text-to-speech/:voice_id` or the Node.js SDK.
-2. **Streaming** – For longer content, use `/v1/text-to-speech/:voice_id/stream` for lower latency.
-3. **Client usage** – Fetch from the API route, then play via `new Audio(url)` or `HTMLAudioElement`.
-
-### Example flow
-
-- User clicks a “Listen” icon next to the current step.
-- Client calls `/api/tts?text=...` (or POST with body).
-- Server calls ElevenLabs, returns audio bytes or a URL.
-- Client plays the audio.
-
-### Notes
-
-- ElevenLabs has usage limits; cache frequently used phrases if needed.
-- Use `elevenlabs` npm package for Node.js.
+On each goal's detail page, a **Voice Mentor** section shows a short summary and a **Listen** button. Clicking it plays a calm voice briefing: today's next step for the goal and why it matters. The app calls `POST /api/tts` with the summary text; the route uses the ElevenLabs API and returns MP3 audio (no extra npm packages). Add `ELEVENLABS_API_KEY` to `.env.local` as in **Getting started** above.
