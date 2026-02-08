@@ -1,6 +1,6 @@
 # NextStep
 
-AI micro-mentor that turns goals into daily, achievable next steps.
+AI micro-mentor that turns goals into daily, achievable next steps. Set due dates on tasks, track progress in an in-app calendar, and hear a voice briefing for your next step.
 
 ## Using the Web App
 
@@ -29,7 +29,7 @@ Your dashboard lists your active goals as cards. Each card shows:
 - Progress (e.g. 2 of 5 tasks)
 - A preview of tasks
 
-Use **New Goal** to create a goal, or **Completed** to see goals you've finished or partially finished.
+Use **New Goal** to create a goal, **Calendar** to see tasks by due date, or **Completed** to see goals you've finished or partially finished.
 
 ### Creating a new goal
 
@@ -65,8 +65,9 @@ When you complete the last task, a **Reflect on your journey** dialog appears. Y
 ### Calendar
 
 1. Click **Calendar** in the dashboard nav.
-2. See a month view and **Upcoming** list of tasks that have due dates.
-3. Set due dates on the goal roadmap (date picker under each task). Completed tasks show with a checkmark on the calendar.
+2. Use the month view to see which days have due tasks; use the arrows or **Today** to change month.
+3. The **Upcoming** list shows tasks with due dates from today onward, grouped by date. Click a task to open its goal.
+4. Due dates are set on the goal roadmap (date picker under each unlocked task). They display in your local timezone.
 
 ### Completed goals page
 
