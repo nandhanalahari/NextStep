@@ -66,8 +66,9 @@ When you complete the last task, a **Reflect on your journey** dialog appears. Y
 
 1. Click **Calendar** in the dashboard nav.
 2. Use the month view to see which days have due tasks; use the arrows or **Today** to change month.
-3. The **Upcoming** list shows tasks with due dates from today onward, grouped by date. Click a task to open its goal.
-4. Due dates are set on the goal roadmap (date picker under each unlocked task). They display in your local timezone.
+3. **Upcoming** lists only *incomplete* tasks with due dates from today onward, grouped by date. Click a task to open its goal.
+4. **Completed** lists tasks you’ve already finished that had due dates, grouped by date (newest first). Click a task to open its goal.
+5. Due dates are set on the goal roadmap (date picker under each unlocked task). They display in your local timezone.
 
 ### Completed goals page
 
