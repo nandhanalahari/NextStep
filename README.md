@@ -45,13 +45,14 @@ Use **New Goal** to create a goal, or **Completed** to see goals you've finished
 
 1. Click a goal card to open its roadmap.
 2. **Voice Mentor** – Each goal has a summary section. Click **Listen** to hear a calm voice briefing: "Today's next step is… here's why it matters."
-3. Tasks appear left to right in sequence.
-4. Only the next incomplete task can be worked on; earlier ones are unlocked by completing previous tasks.
-5. Click a task's checkbox to mark it complete.
-6. In the dialog, enter a short summary of what you did and click **Mark complete**.
-7. Use the **+** between tasks to add custom tasks.
-8. Use the trash icon on a task to delete it.
-9. Click **Delete Goal** (top-right) to remove the goal.
+3. **Add to Google Calendar** – Connect your Google account once, then use **Add today's step to Calendar** to create the next task as a calendar event.
+4. Tasks appear left to right in sequence.
+5. Only the next incomplete task can be worked on; earlier ones are unlocked by completing previous tasks.
+6. Click a task's checkbox to mark it complete.
+7. In the dialog, enter a short summary of what you did and click **Mark complete**.
+8. Use the **+** between tasks to add custom tasks.
+9. Use the trash icon on a task to delete it.
+10. Click **Delete Goal** (top-right) to remove the goal.
 
 ### Completing a goal
 
@@ -83,6 +84,7 @@ cp .env.local.example .env.local
 - **AUTH_SECRET** – Generate: `openssl rand -base64 32`
 - **GOOGLE_GENERATIVE_AI_API_KEY** – For AI-generated goal plans (see below).
 - **ELEVENLABS_API_KEY** – For Voice Mentor (see below).
+- **GOOGLE_CLIENT_ID**, **GOOGLE_CLIENT_SECRET**, **GOOGLE_REDIRECT_URI** – For Google Calendar (see below).
 
 ### 2. Free Gemini API key (for "Get started" / AI plans)
 
@@ -108,7 +110,22 @@ NextStep uses ElevenLabs text-to-speech for the Voice Mentor feature:
    ELEVENLABS_API_KEY=your-copied-key
    ```
 
-### 4. Run the app
+### 4. Google Calendar (optional)
+
+To let users add "today's next step" to Google Calendar:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a project (or use existing), enable **Google Calendar API**, and create **OAuth 2.0 Client ID** (Web application).
+2. Add **Authorized redirect URI**: `http://localhost:3000/api/auth/google/callback` (or your app URL, e.g. `http://localhost:3002/...` if you run on 3002).
+3. Copy Client ID and Client Secret into `.env.local`:
+   ```bash
+   GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=GOCSPX-xxx
+   GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+   ```
+
+On a goal's detail page, users can click **Connect Google Calendar**, then **Add today's step to Calendar**. The next incomplete task is created as an event (default today 9:00 AM UTC).
+
+### 5. Run the app
 
 ```bash
 npm install

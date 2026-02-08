@@ -22,6 +22,7 @@ import {
   Trash,
 } from "lucide-react"
 import { VoiceSummary } from "@/components/voice-summary"
+import { AddToCalendar } from "@/components/add-to-calendar"
 import {
   Dialog,
   DialogContent,
@@ -213,6 +214,7 @@ export default function GoalDetailPage({
       </div>
 
       <VoiceSummary goal={goal} />
+      <AddToCalendar goal={goal} />
 
       {goal.completed && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-6 animate-scale-in">
