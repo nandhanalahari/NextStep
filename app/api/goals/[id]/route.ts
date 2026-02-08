@@ -41,6 +41,13 @@ export async function PATCH(
     if (bodyTasks !== undefined && Array.isArray(bodyTasks)) {
       const current = await db.collection("goals").findOne({ id, userId: user.id })
       const currentTasks = (current?.tasks as TaskDoc[] | undefined) ?? []
+      const bodyTaskIds = new Set((bodyTasks as TaskDoc[]).map((t) => t.id))
+
+      for (const prev of currentTasks) {
+        if (!bodyTaskIds.has(prev.id) && prev.googleCalendarEventId) {
+          await deleteTaskEventFromGoogleCalendar(user.id, prev.googleCalendarEventId)
+        }
+      }
 
       const merged: TaskDoc[] = bodyTasks.map((t: TaskDoc) => {
         const cur = currentTasks.find((c) => c.id === t.id)
@@ -54,7 +61,10 @@ export async function PATCH(
         const task = merged[i]
         const prev = currentTasks.find((c) => c.id === task.id)
 
-        if (task.dueDate) {
+        if (task.completed && prev?.googleCalendarEventId) {
+          await deleteTaskEventFromGoogleCalendar(user.id, prev.googleCalendarEventId)
+          merged[i] = { ...task, googleCalendarEventId: undefined }
+        } else if (task.dueDate) {
           const eventId = await syncTaskEventToGoogleCalendar(user.id, (current?.title as string) ?? "", task)
           if (eventId) merged[i] = { ...task, googleCalendarEventId: eventId }
         } else if (prev?.googleCalendarEventId) {
