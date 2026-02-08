@@ -146,10 +146,12 @@ export default function CalendarPage() {
               .filter(([d]) => d >= todayStr)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .slice(0, 14)
+              .map(([dateStr, list]) => [dateStr, list.filter(({ task }) => !task.completed)] as const)
+              .filter(([, list]) => list.length > 0)
             if (sorted.length === 0) {
               return (
                 <p className="text-sm text-muted-foreground">
-                  No tasks with due dates. Open a goal and set a due date on your current step.
+                  No upcoming tasks with due dates. Open a goal and set a due date on your current step.
                 </p>
               )
             }
@@ -170,12 +172,52 @@ export default function CalendarPage() {
                         href={`/dashboard/${goalId}`}
                         className="flex items-center gap-2 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm hover:border-primary/30"
                       >
-                        {task.completed ? (
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                        ) : (
-                          <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        )}
+                        <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="flex-1 truncate font-medium text-foreground">{task.title}</span>
+                        <span className="text-xs text-muted-foreground truncate">{goalTitle}</span>
+                      </Link>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            )
+          })()}
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="font-display text-lg font-semibold text-foreground mb-3">Completed</h2>
+          {(() => {
+            const sorted = Array.from(tasksByDate.entries())
+              .map(([dateStr, list]) => [dateStr, list.filter(({ task }) => task.completed)] as const)
+              .filter(([, list]) => list.length > 0)
+              .sort((a, b) => b[0].localeCompare(a[0]))
+              .slice(0, 14)
+            if (sorted.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground">
+                  No completed tasks with due dates yet.
+                </p>
+              )
+            }
+            return (
+              <ul className="space-y-2">
+                {sorted.map(([dateStr, list]) => (
+                  <li key={dateStr} className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {new Date(dateStr + "T12:00:00").toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                    {list.map(({ goalId, goalTitle, task }) => (
+                      <Link
+                        key={task.id}
+                        href={`/dashboard/${goalId}`}
+                        className="flex items-center gap-2 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm hover:border-primary/30"
+                      >
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="flex-1 truncate font-medium text-muted-foreground line-through">{task.title}</span>
                         <span className="text-xs text-muted-foreground truncate">{goalTitle}</span>
                       </Link>
                     ))}
