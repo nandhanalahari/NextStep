@@ -30,8 +30,8 @@ export function Footer() {
           <a href="#how-it-works" className="transition-colors hover:text-foreground">
             How It Works
           </a>
-          <a href="#testimonials" className="transition-colors hover:text-foreground">
-            Testimonials
+          <a href="#faq" className="transition-colors hover:text-foreground">
+            FAQ
           </a>
         </div>
 
