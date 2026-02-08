@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/mongodb"
 import { getCurrentUser } from "@/lib/auth-server"
+import {
+  syncTaskEventToGoogleCalendar,
+  deleteTaskEventFromGoogleCalendar,
+} from "@/lib/google-calendar"
+
+type TaskDoc = {
+  id: string
+  title: string
+  description?: string
+  completed: boolean
+  dueDate?: string
+  googleCalendarEventId?: string
+  [key: string]: unknown
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -14,16 +28,45 @@ export async function PATCH(
 
     const { id } = await params
     const body = await req.json()
-    const { title, description, tasks, createdAt, completed, reflection } = body
+    const { title, description, tasks: bodyTasks, createdAt, completed, reflection } = body
 
     const db = await getDb()
     const update: Record<string, unknown> = {}
     if (title !== undefined) update.title = title
     if (description !== undefined) update.description = description
-    if (tasks !== undefined) update.tasks = tasks
     if (createdAt !== undefined) update.createdAt = createdAt
     if (completed !== undefined) update.completed = completed
     if (reflection !== undefined) update.reflection = reflection
+
+    let tasksToSet: TaskDoc[] | undefined
+
+    if (bodyTasks !== undefined && Array.isArray(bodyTasks)) {
+      const current = await db.collection("goals").findOne({ id, userId: user.id })
+      const currentTasks = (current?.tasks as TaskDoc[] | undefined) ?? []
+
+      const merged: TaskDoc[] = bodyTasks.map((t: TaskDoc) => {
+        const cur = currentTasks.find((c) => c.id === t.id)
+        return {
+          ...t,
+          googleCalendarEventId: cur?.googleCalendarEventId,
+        }
+      })
+
+      for (let i = 0; i < merged.length; i++) {
+        const task = merged[i]
+        const prev = currentTasks.find((c) => c.id === task.id)
+
+        if (task.dueDate) {
+          const eventId = await syncTaskEventToGoogleCalendar(user.id, (current?.title as string) ?? "", task)
+          if (eventId) merged[i] = { ...task, googleCalendarEventId: eventId }
+        } else if (prev?.googleCalendarEventId) {
+          await deleteTaskEventFromGoogleCalendar(user.id, prev.googleCalendarEventId)
+          merged[i] = { ...task, googleCalendarEventId: undefined }
+        }
+      }
+
+      update.tasks = merged
+    }
 
     const result = await db.collection("goals").findOneAndUpdate(
       { id, userId: user.id },

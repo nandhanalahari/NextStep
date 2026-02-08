@@ -54,3 +54,101 @@ export async function isCalendarConnected(userId: string): Promise<boolean> {
   const token = await getValidAccessToken(userId)
   return !!token
 }
+
+const CALENDAR_EVENTS_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+
+export interface TaskForCalendarSync {
+  id: string
+  title: string
+  description?: string
+  dueDate?: string
+  googleCalendarEventId?: string
+}
+
+/**
+ * Create or update a Google Calendar all-day event for a task. Returns the event id or null.
+ */
+export async function syncTaskEventToGoogleCalendar(
+  userId: string,
+  goalTitle: string,
+  task: TaskForCalendarSync
+): Promise<string | null> {
+  if (!task.dueDate) return null
+
+  const accessToken = await getValidAccessToken(userId)
+  if (!accessToken) return null
+
+  const desc = [goalTitle, task.description].filter(Boolean).join("\n\n")
+  const nextDay = new Date(task.dueDate + "T12:00:00")
+  nextDay.setDate(nextDay.getDate() + 1)
+  const endDate = nextDay.toISOString().slice(0, 10)
+  const event = {
+    summary: task.title,
+    description: desc,
+    start: { date: task.dueDate },
+    end: { date: endDate },
+  }
+
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  }
+
+  if (task.googleCalendarEventId) {
+    const res = await fetch(
+      `${CALENDAR_EVENTS_URL}/${task.googleCalendarEventId}`,
+      { method: "PUT", headers, body: JSON.stringify(event) }
+    )
+    if (res.status === 404) {
+      // Event was deleted in Google Calendar; create new one
+      const createRes = await fetch(CALENDAR_EVENTS_URL, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(event),
+      })
+      if (!createRes.ok) {
+        console.error("Google Calendar create-after-update failed:", createRes.status)
+        return null
+      }
+      const data = (await createRes.json()) as { id: string }
+      return data.id
+    }
+    if (!res.ok) {
+      console.error("Google Calendar update failed:", res.status)
+      return null
+    }
+    const data = (await res.json()) as { id: string }
+    return data.id
+  }
+
+  const res = await fetch(CALENDAR_EVENTS_URL, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(event),
+  })
+  if (!res.ok) {
+    console.error("Google Calendar create failed:", res.status)
+    return null
+  }
+  const data = (await res.json()) as { id: string }
+  return data.id
+}
+
+/**
+ * Delete a task's event from Google Calendar. No-op if no token or event missing.
+ */
+export async function deleteTaskEventFromGoogleCalendar(
+  userId: string,
+  eventId: string
+): Promise<void> {
+  const accessToken = await getValidAccessToken(userId)
+  if (!accessToken) return
+
+  const res = await fetch(
+    `${CALENDAR_EVENTS_URL}/${eventId}`,
+    { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` } }
+  )
+  if (!res.ok && res.status !== 404) {
+    console.error("Google Calendar delete failed:", res.status)
+  }
+}

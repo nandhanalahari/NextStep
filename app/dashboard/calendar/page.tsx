@@ -1,14 +1,17 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import Link from "next/link"
 import { useGoals } from "@/lib/goals-context"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, CalendarDays, CheckCircle2, Circle } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarDays, CheckCircle2, Circle, CalendarPlus, Loader2, ExternalLink } from "lucide-react"
+import { toast } from "sonner"
 
 export default function CalendarPage() {
   const { goals } = useGoals()
+  const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
+  const [syncLoading, setSyncLoading] = useState(false)
   const [viewMonth, setViewMonth] = useState(() => {
     const d = new Date()
     return { year: d.getFullYear(), month: d.getMonth() }
@@ -58,6 +61,35 @@ export default function CalendarPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
   }, [])
 
+  useEffect(() => {
+    fetch("/api/calendar/status")
+      .then((r) => r.json())
+      .then((d) => setGoogleConnected(d.connected))
+      .catch(() => setGoogleConnected(false))
+  }, [])
+
+  const handleSyncToGoogle = async () => {
+    setSyncLoading(true)
+    try {
+      const timeZone = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC"
+      const res = await fetch("/api/calendar/sync-upcoming", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeZone }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(data.error || "Failed to sync to Google Calendar")
+        return
+      }
+      toast.success(data.message || `${data.count} tasks added to Google Calendar.`)
+    } catch {
+      toast.error("Something went wrong")
+    } finally {
+      setSyncLoading(false)
+    }
+  }
+
   return (
     <DashboardShell>
       <div className="flex flex-col gap-6">
@@ -69,6 +101,50 @@ export default function CalendarPage() {
           <p className="text-sm text-muted-foreground">
             Set due dates on your roadmap tasks, then see them here.
           </p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2 mb-2">
+            <CalendarPlus className="h-5 w-5 text-primary" />
+            Google Calendar
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {googleConnected === null ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Checking…
+              </span>
+            ) : googleConnected ? (
+              "Sync all upcoming tasks to Google Calendar as events at 11:59 PM on each due date."
+            ) : (
+              "Connect your Google account to add your upcoming tasks to Google Calendar."
+            )}
+          </p>
+          {googleConnected === null ? null : !googleConnected ? (
+            <Button
+              variant="outline"
+              className="border-primary/30 text-primary hover:bg-primary/10"
+              asChild
+            >
+              <a href="/api/auth/google">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Connect with Google Calendar
+              </a>
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSyncToGoogle}
+              disabled={syncLoading}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {syncLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarPlus className="mr-2 h-4 w-4" />
+              )}
+              {syncLoading ? "Syncing…" : "Sync upcoming tasks to Google Calendar"}
+            </Button>
+          )}
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4">
