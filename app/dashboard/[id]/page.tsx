@@ -307,10 +307,17 @@ export default function GoalDetailPage({
                             <Trash className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <button
-                          type="button"
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
-                          className="min-w-0 flex-1 text-left"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault()
+                              setExpandedTaskId(expandedTaskId === task.id ? null : task.id)
+                            }
+                          }}
+                          className="min-w-0 flex-1 cursor-pointer text-left"
                         >
                           <span
                             className={`block text-sm font-medium ${
@@ -366,7 +373,7 @@ export default function GoalDetailPage({
                               Click to expand
                             </span>
                           )}
-                        </button>
+                        </div>
                       </div>
                     </div>
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-background border border-border mt-2 text-xs font-medium text-muted-foreground">
