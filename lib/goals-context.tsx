@@ -9,6 +9,8 @@ export interface Task {
   description: string
   completed: boolean
   completionSummary?: string
+  /** ISO date string (YYYY-MM-DD) for when the task is due */
+  dueDate?: string
 }
 
 export interface GoalReflection {
@@ -35,6 +37,7 @@ interface GoalsContextType {
   completeTask: (goalId: string, taskId: string, completionSummary: string) => Promise<void>
   updateGoalReflection: (goalId: string, reflection: GoalReflection) => Promise<void>
   addTask: (goalId: string, afterIndex: number, title: string, description: string) => Promise<void>
+  setTaskDueDate: (goalId: string, taskId: string, dueDate: string | null) => Promise<void>
   deleteTask: (goalId: string, taskId: string) => Promise<void>
   deleteGoal: (goalId: string) => Promise<void>
   refetch: () => Promise<void>
@@ -257,6 +260,25 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
     [goals, updateGoalOnServer, deleteGoalById]
   )
 
+  const setTaskDueDate = useCallback(
+    async (goalId: string, taskId: string, dueDate: string | null) => {
+      const goal = goals.find((g) => g.id === goalId)
+      if (!goal) return
+      const updatedTasks = goal.tasks.map((task) =>
+        task.id === taskId ? { ...task, dueDate: dueDate ?? undefined } : task
+      )
+      const updated: Goal = { ...goal, tasks: updatedTasks }
+      setGoals((prev) => prev.map((g) => (g.id === goalId ? updated : g)))
+      try {
+        await updateGoalOnServer(updated)
+      } catch (err) {
+        console.error("setTaskDueDate error:", err)
+        setGoals((prev) => prev.map((g) => (g.id === goalId ? goal : g)))
+      }
+    },
+    [goals, updateGoalOnServer]
+  )
+
   const deleteGoal = deleteGoalById
 
   const getGoal = useCallback(
@@ -278,6 +300,7 @@ export function GoalsProvider({ children }: { children: ReactNode }) {
         completeTask,
         updateGoalReflection,
         addTask,
+        setTaskDueDate,
         deleteTask,
         deleteGoal,
         refetch,

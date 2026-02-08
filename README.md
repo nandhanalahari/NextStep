@@ -45,7 +45,7 @@ Use **New Goal** to create a goal, or **Completed** to see goals you've finished
 
 1. Click a goal card to open its roadmap.
 2. **Voice Mentor** – Each goal has a summary section. Click **Listen** to hear a calm voice briefing: "Today's next step is… here's why it matters."
-3. **Add to Google Calendar** – Connect your Google account once, then use **Add today's step to Calendar** to create the next task as a calendar event.
+3. **Due dates** – Set a due date on any unlocked task using the date picker. View all due tasks on the **Calendar** page.
 4. Tasks appear left to right in sequence.
 5. Only the next incomplete task can be worked on; earlier ones are unlocked by completing previous tasks.
 6. Click a task's checkbox to mark it complete.
@@ -61,6 +61,12 @@ When you complete the last task, a **Reflect on your journey** dialog appears. Y
 - Rate satisfaction (1–5)
 - Describe how you felt at the start and at the end
 - Click **Save reflection** to finish
+
+### Calendar
+
+1. Click **Calendar** in the dashboard nav.
+2. See a month view and **Upcoming** list of tasks that have due dates.
+3. Set due dates on the goal roadmap (date picker under each task). Completed tasks show with a checkmark on the calendar.
 
 ### Completed goals page
 
@@ -84,7 +90,7 @@ cp .env.local.example .env.local
 - **AUTH_SECRET** – Generate: `openssl rand -base64 32`
 - **GOOGLE_GENERATIVE_AI_API_KEY** – For AI-generated goal plans (see below).
 - **ELEVENLABS_API_KEY** – For Voice Mentor (see below).
-- **GOOGLE_CLIENT_ID**, **GOOGLE_CLIENT_SECRET**, **GOOGLE_REDIRECT_URI** – For Google Calendar (see below).
+- **GOOGLE_CLIENT_ID**, **GOOGLE_CLIENT_SECRET**, **GOOGLE_REDIRECT_URI** – Optional, for Google Calendar export (see below). The in-app calendar works without these.
 
 ### 2. Free Gemini API key (for "Get started" / AI plans)
 
@@ -123,7 +129,7 @@ To let users add "today's next step" to Google Calendar:
    GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
    ```
 
-On a goal's detail page, users can click **Connect Google Calendar**, then **Add today's step to Calendar**. The next incomplete task is created as an event (default today 9:00 AM UTC).
+The app also has an **in-app calendar** (Dashboard → Calendar) where you set due dates on tasks and see them in a month view; no Google sign-in required.
 
 ### 5. Run the app
 

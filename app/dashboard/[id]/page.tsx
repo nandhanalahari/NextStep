@@ -14,15 +14,15 @@ import {
   Trash2,
   Trophy,
   PartyPopper,
-  Calendar,
+  Calendar as CalendarIcon,
   Lock,
   Plus,
   ChevronDown,
   ChevronUp,
   Trash,
+  CalendarDays,
 } from "lucide-react"
 import { VoiceSummary } from "@/components/voice-summary"
-import { AddToCalendar } from "@/components/add-to-calendar"
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ export default function GoalDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const { getGoal, toggleTask, completeTask, updateGoalReflection, addTask, deleteTask, deleteGoal } = useGoals()
+  const { getGoal, toggleTask, completeTask, updateGoalReflection, addTask, setTaskDueDate, deleteTask, deleteGoal } = useGoals()
   const [celebrateId, setCelebrateId] = useState<string | null>(null)
   const [customTitle, setCustomTitle] = useState("")
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -180,7 +180,7 @@ export default function GoalDetailPage({
               {goal.description}
             </p>
             <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
+              <CalendarIcon className="h-4 w-4" />
               Created {createdDate}
             </div>
           </div>
@@ -214,7 +214,6 @@ export default function GoalDetailPage({
       </div>
 
       <VoiceSummary goal={goal} />
-      <AddToCalendar goal={goal} />
 
       {goal.completed && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-6 animate-scale-in">
@@ -324,6 +323,26 @@ export default function GoalDetailPage({
                           >
                             {task.title}
                           </span>
+                          {unlocked && (
+                            <div className="mt-1.5 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <input
+                                type="date"
+                                value={task.dueDate ?? ""}
+                                onChange={(e) => setTaskDueDate(goal.id, task.id, e.target.value || null)}
+                                className="h-6 min-w-0 max-w-[120px] rounded border border-border bg-background/80 px-1.5 text-[11px] text-muted-foreground focus:border-primary/50 focus:outline-none"
+                              />
+                              {task.dueDate && (
+                                <button
+                                  type="button"
+                                  onClick={() => setTaskDueDate(goal.id, task.id, null)}
+                                  className="text-[10px] text-muted-foreground hover:text-foreground"
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
+                          )}
                           {(task.description || (task.completed && task.completionSummary)) && expandedTaskId === task.id && (
                             <div className="mt-2 space-y-2">
                               {task.description && (

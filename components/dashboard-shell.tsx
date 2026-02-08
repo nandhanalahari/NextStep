@@ -5,11 +5,12 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { Zap, LayoutGrid, Trophy, Plus, LogOut } from "lucide-react"
+import { Zap, LayoutGrid, Calendar, Trophy, Plus, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+  { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
   { label: "Completed", href: "/dashboard/completed", icon: Trophy },
 ]
 
