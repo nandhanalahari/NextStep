@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { AnimatedSection } from "@/components/animated-section"
-import { Star } from "lucide-react"
+import { AnimatedSection } from "@/components/animated-section";
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -25,11 +25,14 @@ const testimonials = [
       "The mood check-in is genius. On tough days it gives me lighter tasks. On good days it pushes me. It actually gets me.",
     stars: 5,
   },
-]
+];
 
 export function TestimonialsSection() {
   return (
-    <section id="testimonials" className="relative px-6 py-24 md:py-32">
+    <section
+      id="testimonials"
+      className="relative px-6 pt-12 pb-24 md:pt-16 md:pb-32"
+    >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute right-1/4 top-1/2 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
       </div>
@@ -47,7 +50,11 @@ export function TestimonialsSection() {
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">
           {testimonials.map((t, i) => (
-            <AnimatedSection key={t.name} animation="fade-in-up" delay={i * 150}>
+            <AnimatedSection
+              key={t.name}
+              animation="fade-in-up"
+              delay={i * 150}
+            >
               <div className="group h-full rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/30">
                 <div className="flex gap-1">
                   {Array.from({ length: t.stars }).map((_, j) => (
@@ -77,5 +84,5 @@ export function TestimonialsSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

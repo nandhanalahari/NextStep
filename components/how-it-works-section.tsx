@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { AnimatedSection } from "@/components/animated-section"
-import { cn } from "@/lib/utils"
+import { AnimatedSection } from "@/components/animated-section";
+import { cn } from "@/lib/utils";
 
 const steps = [
   {
@@ -40,7 +40,9 @@ const steps = [
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-          <p className="text-xs font-medium text-primary">{"Today's Next Step"}</p>
+          <p className="text-xs font-medium text-primary">
+            {"Today's Next Step"}
+          </p>
         </div>
         <p className="mt-2 font-display text-sm font-semibold text-foreground">
           Complete 2 LeetCode Easy problems on Arrays
@@ -73,7 +75,7 @@ const steps = [
                 ? "border-primary/20 bg-primary/5"
                 : item.current
                   ? "border-primary/40 bg-primary/10"
-                  : "border-border bg-secondary/30"
+                  : "border-border bg-secondary/30",
             )}
           >
             <div
@@ -81,18 +83,29 @@ const steps = [
                 "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs",
                 item.done
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-muted-foreground"
+                  : "border-muted-foreground",
               )}
             >
               {item.done && (
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
             </div>
             <span
               className={cn(
-                item.done ? "text-muted-foreground line-through" : "text-foreground"
+                item.done
+                  ? "text-muted-foreground line-through"
+                  : "text-foreground",
               )}
             >
               {item.label}
@@ -102,11 +115,14 @@ const steps = [
       </div>
     ),
   },
-]
+];
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="relative px-6 py-24 md:py-32">
+    <section
+      id="how-it-works"
+      className="relative px-6 pt-24 pb-12 md:pt-32 md:pb-16"
+    >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-0 bottom-0 h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px]" />
       </div>
@@ -136,7 +152,7 @@ export function HowItWorksSection() {
               <div
                 className={cn(
                   "flex flex-col items-center gap-8 md:flex-row md:gap-16",
-                  i % 2 !== 0 && "md:flex-row-reverse"
+                  i % 2 !== 0 && "md:flex-row-reverse",
                 )}
               >
                 <div className="flex-1 space-y-4">
@@ -161,5 +177,5 @@ export function HowItWorksSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
