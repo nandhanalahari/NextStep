@@ -40,7 +40,7 @@ export function FaqSection() {
   return (
     <section
       id="faq"
-      className="relative px-6 -mt-8 pt-8 pb-24 md:-mt-12 md:pt-12 md:pb-32"
+      className="relative px-6 pt-12 pb-24 md:pt-16 md:pb-32"
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute right-1/4 top-1/2 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />

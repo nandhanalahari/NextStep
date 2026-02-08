@@ -104,3 +104,39 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## ElevenLabs integration (future)
+
+ElevenLabs provides text-to-speech. Possible use cases in NextStep:
+
+- **Read aloud** – Play the current “next step” or goal description via audio for accessibility or hands-free use.
+- **Task completion feedback** – Short voice affirmation when a task is marked done.
+- **Motivational snippets** – Optional voice encouragement when opening the dashboard or finishing a streak.
+
+### Setup
+
+1. Sign up at [ElevenLabs](https://elevenlabs.io) and create an API key.
+2. Add to `.env.local`:
+   ```
+   ELEVENLABS_API_KEY=your-key
+   ```
+
+### Implementation approaches
+
+1. **API route** – `POST /api/tts` that accepts text, calls ElevenLabs, and returns audio (e.g. MP3). Use `POST /v1/text-to-speech/:voice_id` or the Node.js SDK.
+2. **Streaming** – For longer content, use `/v1/text-to-speech/:voice_id/stream` for lower latency.
+3. **Client usage** – Fetch from the API route, then play via `new Audio(url)` or `HTMLAudioElement`.
+
+### Example flow
+
+- User clicks a “Listen” icon next to the current step.
+- Client calls `/api/tts?text=...` (or POST with body).
+- Server calls ElevenLabs, returns audio bytes or a URL.
+- Client plays the audio.
+
+### Notes
+
+- ElevenLabs has usage limits; cache frequently used phrases if needed.
+- Use `elevenlabs` npm package for Node.js.
