@@ -38,8 +38,6 @@ export async function PATCH(
     if (completed !== undefined) update.completed = completed
     if (reflection !== undefined) update.reflection = reflection
 
-    let tasksToSet: TaskDoc[] | undefined
-
     if (bodyTasks !== undefined && Array.isArray(bodyTasks)) {
       const current = await db.collection("goals").findOne({ id, userId: user.id })
       const currentTasks = (current?.tasks as TaskDoc[] | undefined) ?? []
@@ -48,7 +46,7 @@ export async function PATCH(
         const cur = currentTasks.find((c) => c.id === t.id)
         return {
           ...t,
-          googleCalendarEventId: cur?.googleCalendarEventId,
+          googleCalendarEventId: t.googleCalendarEventId ?? cur?.googleCalendarEventId,
         }
       })
 

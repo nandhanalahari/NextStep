@@ -34,13 +34,14 @@ export async function POST(req: NextRequest) {
     .find({ userId: user.id, completed: { $ne: true } })
     .toArray()
 
-  type TaskDoc = { id: string; title: string; description?: string; completed: boolean; dueDate?: string }
-  const upcoming: { goalTitle: string; task: TaskDoc }[] = []
+  type TaskDoc = { id: string; title: string; description?: string; completed: boolean; dueDate?: string; googleCalendarEventId?: string }
+  const upcoming: { goalId: string; goalTitle: string; task: TaskDoc }[] = []
   for (const goal of goals) {
     const tasks = (goal.tasks as TaskDoc[]) ?? []
+    const goalId = goal.id as string
     for (const task of tasks) {
       if (task.dueDate && !task.completed) {
-        upcoming.push({ goalTitle: goal.title as string, task })
+        upcoming.push({ goalId, goalTitle: goal.title as string, task })
       }
     }
   }
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 
   let created = 0
-  for (const { goalTitle, task } of upcoming) {
+  for (const { goalId, goalTitle, task } of upcoming) {
     const date = task.dueDate!
     const startDateTime = `${date}T23:59:00`
     const [y, m, d] = date.split("-").map(Number)
@@ -74,15 +75,48 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const res = await fetch(CALENDAR_EVENTS_URL, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(event),
-      })
-      if (res.ok) {
-        created++
+      if (task.googleCalendarEventId) {
+        const updateRes = await fetch(
+          `${CALENDAR_EVENTS_URL}/${task.googleCalendarEventId}`,
+          { method: "PUT", headers, body: JSON.stringify(event) }
+        )
+        if (updateRes.ok) {
+          created++
+        } else if (updateRes.status === 404) {
+          const createRes = await fetch(CALENDAR_EVENTS_URL, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(event),
+          })
+          if (createRes.ok) {
+            created++
+            const data = (await createRes.json()) as { id: string }
+            await db.collection("goals").updateOne(
+              { id: goalId, userId: user.id },
+              { $set: { "tasks.$[elem].googleCalendarEventId": data.id } },
+              { arrayFilters: [{ "elem.id": task.id }] }
+            )
+          }
+        } else {
+          console.error("Sync upcoming update failed:", updateRes.status, await updateRes.text())
+        }
       } else {
-        console.error("Sync upcoming event failed:", res.status, await res.text())
+        const res = await fetch(CALENDAR_EVENTS_URL, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(event),
+        })
+        if (res.ok) {
+          created++
+          const data = (await res.json()) as { id: string }
+          await db.collection("goals").updateOne(
+            { id: goalId, userId: user.id },
+            { $set: { "tasks.$[elem].googleCalendarEventId": data.id } },
+            { arrayFilters: [{ "elem.id": task.id }] }
+          )
+        } else {
+          console.error("Sync upcoming event failed:", res.status, await res.text())
+        }
       }
     } catch (err) {
       console.error("Sync upcoming error for task", task.id, err)

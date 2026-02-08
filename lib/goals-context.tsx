@@ -11,6 +11,8 @@ export interface Task {
   completionSummary?: string
   /** ISO date string (YYYY-MM-DD) for when the task is due */
   dueDate?: string
+  /** Set by server when task is synced to Google Calendar; used to update/delete the event */
+  googleCalendarEventId?: string
 }
 
 export interface GoalReflection {
