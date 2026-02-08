@@ -332,8 +332,19 @@ export default function GoalDetailPage({
                           </span>
                           {unlocked && (
                             <div className="mt-1.5 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <label
+                                htmlFor={`due-date-${goal.id}-${task.id}`}
+                                className="cursor-pointer text-muted-foreground hover:text-foreground shrink-0"
+                                aria-label="Set due date"
+                                onClick={(e) => {
+                                  const input = document.getElementById(`due-date-${goal.id}-${task.id}`) as HTMLInputElement | null
+                                  if (input?.showPicker) input.showPicker()
+                                }}
+                              >
+                                <CalendarDays className="h-3.5 w-3.5" />
+                              </label>
                               <input
+                                id={`due-date-${goal.id}-${task.id}`}
                                 type="date"
                                 value={task.dueDate ?? ""}
                                 onChange={(e) => setTaskDueDate(goal.id, task.id, e.target.value || null)}
