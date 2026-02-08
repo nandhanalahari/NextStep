@@ -112,7 +112,7 @@ export default function CalendarPage() {
                   }`}
                 >
                   <span className={`text-sm ${isToday ? "font-semibold text-primary" : "text-foreground"}`}>
-                    {new Date(dateStr).getDate()}
+                    {new Date(dateStr + "T12:00:00").getDate()}
                   </span>
                   {tasks.length > 0 && (
                     <div className="mt-0.5 space-y-0.5">
@@ -158,7 +158,7 @@ export default function CalendarPage() {
                 {sorted.map(([dateStr, list]) => (
                   <li key={dateStr} className="flex flex-col gap-1">
                     <span className="text-xs font-medium text-muted-foreground">
-                      {new Date(dateStr).toLocaleDateString("en-US", {
+                      {new Date(dateStr + "T12:00:00").toLocaleDateString("en-US", {
                         weekday: "short",
                         month: "short",
                         day: "numeric",
