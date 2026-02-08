@@ -119,24 +119,19 @@ export function HeroSection() {
           </Link>
         </div>
 
-        {/* Stats */}
+        {/* Value highlights */}
         <div
-          className="mx-auto mt-16 grid max-w-lg animate-fade-in-up grid-cols-3 gap-8"
+          className="mx-auto mt-16 flex max-w-2xl animate-fade-in-up flex-wrap items-center justify-center gap-x-10 gap-y-4 text-center"
           style={{ animationDelay: "500ms" }}
         >
           {[
-            { value: "10K+", label: "Active Users" },
-            { value: "92%", label: "Completion Rate" },
-            { value: "4.9", label: "User Rating" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="font-display text-2xl font-bold text-foreground md:text-3xl">
-                {stat.value}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground md:text-sm">
-                {stat.label}
-              </div>
-            </div>
+            { label: "One step at a time" },
+            { label: "Voice mentor & calendar" },
+            { label: "Free to start" },
+          ].map((item) => (
+            <span key={item.label} className="text-sm text-muted-foreground">
+              {item.label}
+            </span>
           ))}
         </div>
       </div>
