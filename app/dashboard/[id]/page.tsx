@@ -21,6 +21,7 @@ import {
   ChevronUp,
   Trash,
 } from "lucide-react"
+import { VoiceSummary } from "@/components/voice-summary"
 import {
   Dialog,
   DialogContent,
@@ -210,6 +211,8 @@ export default function GoalDetailPage({
           </div>
         </div>
       </div>
+
+      <VoiceSummary goal={goal} />
 
       {goal.completed && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-6 animate-scale-in">

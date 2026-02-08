@@ -44,13 +44,14 @@ Use **New Goal** to create a goal, or **Completed** to see goals you’ve finish
 ### Goal detail (roadmap)
 
 1. Click a goal card to open its roadmap.
-2. Tasks appear left to right in sequence.
-3. Only the next incomplete task can be worked on; earlier ones are unlocked by completing previous tasks.
-4. Click a task’s checkbox to mark it complete.
-5. In the dialog, enter a short summary of what you did and click **Mark complete**.
-6. Use the **+** between tasks to add custom tasks.
-7. Use the trash icon on a task to delete it.
-8. Click **Delete Goal** (top-right) to remove the goal.
+2. **Voice Mentor** – Each goal has a summary section. Click **Listen** to hear a calm voice briefing: “Today’s next step is… here’s why it matters.”
+3. Tasks appear left to right in sequence.
+4. Only the next incomplete task can be worked on; earlier ones are unlocked by completing previous tasks.
+5. Click a task’s checkbox to mark it complete.
+6. In the dialog, enter a short summary of what you did and click **Mark complete**.
+7. Use the **+** between tasks to add custom tasks.
+8. Use the trash icon on a task to delete it.
+9. Click **Delete Goal** (top-right) to remove the goal.
 
 ### Completing a goal
 
@@ -81,6 +82,7 @@ cp .env.local.example .env.local
 - **MONGODB_URI** – From [MongoDB Atlas](https://cloud.mongodb.com): Cluster → Connect → Connect your application.
 - **AUTH_SECRET** – Generate: `openssl rand -base64 32`
 - **GOOGLE_GENERATIVE_AI_API_KEY** – For AI-generated goal plans (see below).
+- **ELEVENLABS_API_KEY** – For Voice Mentor (see below).
 
 ### 2. Free Gemini API key (for “Get started” / AI plans)
 
@@ -96,7 +98,17 @@ NextStep uses Google’s Gemini to turn your goal into a step-by-step plan. You 
 
 No credit card is required for the free tier. Rate limits apply; see [Google AI Studio](https://aistudio.google.com/) for current limits.
 
-### 3. Run the app
+### 3. ElevenLabs API key (for Voice Mentor)
+
+NextStep uses ElevenLabs text-to-speech for the Voice Mentor feature:
+
+1. Go to [ElevenLabs](https://elevenlabs.io/app/settings/api-keys) and create an API key.
+2. Add it to `.env.local`:
+   ```bash
+   ELEVENLABS_API_KEY=your-copied-key
+   ```
+
+### 4. Run the app
 
 ```bash
 npm install
@@ -107,9 +119,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## ElevenLabs integration (future)
+## ElevenLabs integration (Voice Mentor)
 
-ElevenLabs provides text-to-speech. Possible use cases in NextStep:
+ElevenLabs text-to-speech powers the Voice Mentor feature. Each goal has a summary section; clicking **Listen** plays a calm voice briefing:
 
 - **Read aloud** – Play the current “next step” or goal description via audio for accessibility or hands-free use.
 - **Task completion feedback** – Short voice affirmation when a task is marked done.
