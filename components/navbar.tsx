@@ -60,7 +60,7 @@ export function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="relative text-sm text-muted-foreground transition-colors hover:text-foreground after:absolute after:left-0 after:bottom-[-2px] after:h-0.5 after:w-full after:bg-primary after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100"
             >
               {link.label}
             </a>
@@ -109,7 +109,7 @@ export function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="relative text-sm text-muted-foreground transition-colors hover:text-foreground after:absolute after:left-0 after:bottom-[-2px] after:h-0.5 after:w-full after:bg-primary after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
